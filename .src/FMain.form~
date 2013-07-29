@@ -1,0 +1,18 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,185.7143,71.4286)
+  Background = &HF5F5F5&
+  Expand = True
+  Text = ("musicPlayer")
+  Icon = Picture["icon:/huge/audio"]
+  { Menu1 Menu
+    Text = ("Menu1")
+    { Menu2 Menu
+      Text = ("Menu2")
+    }
+  }
+  { TreeView1 TreeView
+    MoveScaled(30,18,16,16)
+  }
+}

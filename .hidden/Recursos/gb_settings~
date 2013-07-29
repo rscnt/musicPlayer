@@ -1,0 +1,68 @@
+gb.settings
+Ejemplos: 
+Public Sub ShowASpecialSetting()
+  Dim prhOtherConfFile As Settings
+  Dim prhLangUsed As String
+
+  ' Read a setting from a file used by another application
+  ' located in /home/user/.config/otherapp/
+  ' and named "international.conf"
+  'First create a new instance of Settings class
+  'with the full path to desired file
+  prhOtherConfFile = New Settings("/home/user/.config/otherapp/international.conf")
+  'next read the "Lang1" value from the "UserPreferences" section
+  prhLangUsed = prhOtherConfFile["UserPreferences/Lang1", Null]
+  If IsNull(prhLangUsed) Then
+    Message.Info("No Lang1 found in conf file (or no Section named UserPreferences)")
+  Else
+    Message.Info("The value of Lang1 that found in conf file is:\n" & prhLangUsed)
+  End If
+End
+
+Public Sub Form_Open()
+  ' Update window position from settings file
+  ' If the settings file is not found then
+  ' use default position.
+  Me.Top = Settings["Window/Top", Me.Top]
+  Me.Left = Settings["Window/Left", Me.Left]
+  Me.Height = Settings["Window/Height", Me.Height]
+  Me.Width = Settings["Window/Width", Me.Width]
+End
+
+Public Sub Form_Close()
+  ' Save window settings when application closes
+  Settings["Window/Top"] = Me.Top
+  Settings["Window/Left"] = Me.Left
+  Settings["Window/Height"] = Me.Height
+  Settings["Window/Width"] = Me.Width
+End
+
+[Editor]
+Font = "Bitstream Vera Sans Mono"
+Toolbar = 1
+CleanOnSave = 0
+ShowProc = 1
+ShowChange = 1
+ShowCurrent = 1
+UseRelief = 1
+Color[0] = "&FFFFFF&"
+Color[1] = "&000000&"
+Color[2] = "&00C0A0&"
+Color[3] = "&00C000&"
+
+[ExistingFile]
+ExplorerType = 0
+Splitter = "249,249"
+TreeSequence = "0"
+PreviewImg = 0
+ShowHidden = 0
+
+[ExistingImage]
+Path = "/usr/share/icons/crystalsvg/64x64/devices"
+Key = "1"
+ExplorerType = 1
+Splitter = "212,434"
+TreeSequence = "1"
+PreviewImg = 1
+ShowHidden = 0
+[...]

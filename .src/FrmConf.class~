@@ -1,0 +1,226 @@
+' Gambas class file
+
+Private panelBase As Panel
+Private panelImport As Panel
+'Private $control As Control
+
+Public Sub Form_Open()
+
+  ' Elaborar una sub rutina init
+  ConstruidMenu
+  construirPanelBase
+  construirPanelImport
+  
+End
+
+Private Sub ConstruidMenu()
+  
+  IVMenuOpt.Add("importar", "Importar", Picture.Load("import48x48.png"), Null)
+  IVMenuOpt.Add("base", "Configurar Fuente de Datos", Picture.Load("dabs48x48.png"), Null)
+  panelContexto.Arrangement = 5
+  panelBase = New Panel(panelContexto) As "panelBase"
+  panelBase.Arrangement = 2
+  panelBase.Hide 
+  panelImport = New Panel(panelContexto) As "panelImport"
+  panelImport.Arrangement = 2
+  panelImport.Hide
+End
+
+Public Sub IVMenuOpt_Select()
+
+  cambiarContexto(Last.Key)
+
+End
+
+Private Sub cambiarContexto(contexto As String)
+  Dim $container As Container
+  
+  For Each $container In panelContexto.Children
+   $container.Hide
+  Next
+  
+  Select contexto
+    
+    Case "base"
+      
+      panelBase.Show
+      
+    Case "importar"
+      
+      panelImport.Show
+  
+  End Select
+  
+End
+
+' Construyendo el @panelBase
+' Este contendra un formulario para definir la base de datos a conectar
+
+Private Sub construirPanelBase()
+  
+  Dim btnConectar As Button
+  Dim txtNBase As TextBox
+  Dim txtNServidor As TextBox
+  Dim txtNPuerto As TextBox
+  Dim txtUsuario As TextBox
+  Dim txtPassword As TextBox
+  
+  Dim pnlFoo As Panel
+  Dim lblFoo As Label
+  Dim spFoo As Separator
+  
+  ' Espacio de los elementos dentro de panelBase con respecto
+  ' a este.
+  panelBase.Padding += 20
+  
+  ' Base de datos {{{
+  pnlFoo = New Panel(panelBase)
+  pnlFoo.Arrangement = 1
+  pnlFoo.Height = 24
+  
+  lblFoo = New Label(pnlFoo)
+  lblFoo.Text = "Base de datos: "
+  lblFoo.W = 100
+  txtNBase = New TextBox(pnlFoo) As "txtNBase"
+  txtNBase.Expand = True
+  
+  
+  spFoo = New Separator(panelBase)
+  
+  ' }}}
+  
+  
+  ' Servidor {{{
+  pnlFoo = New Panel(panelBase)
+  pnlFoo.Arrangement = 1
+  pnlFoo.Height = 24
+  
+  lblFoo = New Label(pnlFoo)
+  lblFoo.Text = "Servidor: "
+  lblFoo.W = 100
+  
+  txtNServidor = New TextBox(pnlFoo) As "txtNServidor"
+  txtNServidor.Expand = True
+  
+  spFoo = New Separator(panelBase)
+  
+  ' }}}
+  
+    ' Puerto {{{
+  pnlFoo = New Panel(panelBase)
+  pnlFoo.Arrangement = 1
+  pnlFoo.Height = 24
+  
+  lblFoo = New Label(pnlFoo)
+  lblFoo.Text = "Puerto: "
+  lblFoo.W = 100
+  
+  txtNPuerto = New TextBox(pnlFoo) As "txtNPuerto"
+  txtNPuerto.Expand = True
+  
+  spFoo = New Separator(panelBase)
+  
+  ' }}}
+  
+  ' Usuario {{{
+  pnlFoo = New Panel(panelBase)
+  pnlFoo.Arrangement = 1
+  pnlFoo.Height = 24
+  
+  lblFoo = New Label(pnlFoo)
+  lblFoo.Text = "Usuario: "
+  lblFoo.W = 100
+  
+  txtUsuario = New TextBox(pnlFoo) As "txtUsuario"
+  txtUsuario.Expand = True
+  
+  spFoo = New Separator(panelBase)
+  
+  ' }}}
+  
+  ' Contraseña {{{
+  pnlFoo = New Panel(panelBase)
+  pnlFoo.Arrangement = 1
+  pnlFoo.Height = 24
+  
+  lblFoo = New Label(pnlFoo)
+  lblFoo.Text = "Contaseña: "
+  lblFoo.W = 100
+  
+  txtPassword = New TextBox(pnlFoo) As "txtPassword"
+  txtPassword.Expand = True
+  
+  spFoo = New Separator(panelBase)
+  
+  ' }}}
+  
+  
+  ' Contraseña {{{
+  pnlFoo = New Panel(panelBase)
+  pnlFoo.Arrangement = 1
+  pnlFoo.Height = 40
+  
+  btnConectar = New Button(pnlFoo) As "btnConectar"
+  
+  ' TODO: Implementar
+  btnConectar.Text = "Conectar"
+  btnConectar.Expand = True
+  ' }}}
+  
+End
+
+' @ConstruirPanleImport
+' TODO: Permitir que se agreguen varios directorios
+' Se agregan los elementos para escoger el directorio a importar
+
+Public Sub construirPanelImport()
+  
+  ' Variables {{{
+  ' @btnFoo se usuara para accionar el dialogo de eleccion
+  ' de directorio.
+  ' TODO: Elaborar una mejor descripcion
+  Dim btnFoo As Button
+  ' @lblFoo => label para mostrar indiciaciones
+  ' Dim lblFoo As Label
+  ' @lstFoo => ListView para mostar los directorios a importar
+  ' TODO: Implemetar la importacion de varios directorios
+  ' Dim lstFoo As ListBox
+  ' @pnlFoo => Panel que servira como axuiliar para 
+  ' mantener los controles en orden.
+  Dim pnlFoo As Panel
+  ' }}}
+  
+  ' Espacio de los elementos dentro de panelImport con respecto
+  ' a este.
+  panelImport.Padding += 20
+  
+  ' Armazon {{{
+  ' TODO: Buscar como se escribe correctamente: "Armazon"
+  '  Importar directorio
+  pnlFoo = New Panel(panelImport) As "pnlAcImp"
+  pnlFoo.Arrangement = 2
+  pnlFoo.Expand = True
+  
+  btnFoo = New Button(pnlFoo) As "btnImport"
+  btnFoo.Text = "Seleccione el directorio que desea importar"
+  btnFoo.Height = 30
+  ' }}}
+  
+End
+
+Public Sub btnImport_Click()
+  Dim nombreArchivo As String
+  
+  Dialog.SelectDirectory
+  
+    ' Se asegura que el directorio exista y ademas que se tenga
+  ' permiso para leerlo.
+  If Access(Dialog.Path, gb.Read) And Exist(Dialog.Path) Then 
+    ' añadir mas extensiones
+    For Each nombreArchivo In Dir(Dialog.Path, "*.{mp3,flac,ogg}")
+      ' agregar archivo a la coleccion de audio
+      Reproductor.agregarArchivo(Dialog.Path & "/" & nombreArchivo)
+    Next
+  Endif
+  
+End

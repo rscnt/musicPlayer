@@ -1,0 +1,9 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,185.7143,71.4286)
+  Background = &HF5F5F5&
+  Expand = True
+  Text = ("musicPlayer")
+  Icon = Picture["icon:/huge/audio"]
+}

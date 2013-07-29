@@ -1,0 +1,851 @@
+' Gambas class file
+
+' TODO: Buscar una manera de evitar esto
+Private $reproductor As MediaPlayer
+
+Private $repOutput As MediaControl
+Private drwAnimation As DrawingArea
+
+Private trvView As TreeView
+Private grdView As GridView
+Private grdViewTags As GridView
+
+' Variables contexto
+Private lblArtista As Label
+Private lblAlbum As Label
+Private lblCancion As Label
+
+Private txtTemp As TextBox
+  
+Public Sub _new()
+  
+  init()
+  
+End
+
+Public Sub Form_Resize()
+
+  
+End
+
+Public Function init()
+  
+  Preferencias.init()
+  Datos.init()
+  $reproductor = New MediaPlayer As "Reproductor"
+  buildPanels()
+
+End
+
+Public Function buildPanels()
+  
+  Me.Arrangement = 2
+  buildTopPanel()
+  buildMdlPanel()
+  buildBtmPanel()
+  
+End
+
+Public Function buildTopPanel()
+  
+  Dim $panelTop As Panel
+  ' panelTop => controladores de ventana : izquierda
+  Dim $ventanaPanel As Panel
+  ' panelTop => busqueda : centro
+  Dim $busquedaPanel As Panel
+  ' panelTop => configuracion : derecha
+  Dim $propiedadesPanel As Panel  
+
+  ' Boton temporal
+  Dim btnTmp As Button
+  
+  ' ----- Panel Superior
+  $panelTop = New Panel(Me) As "topPanel"
+  $panelTop.Arrangement = 1
+  $panelTop.Height = 25
+  $panelTop.Padding = 2
+  $panelTop.Background = Color.RGB(108, 193, 242)
+  ' ------- /Panel Superior ---
+  
+  ' --- Panel Superior => controles de ventana
+  $ventanaPanel = New Panel($panelTop) As "ventanaPanel"
+  $ventanaPanel.Arrangement = 3
+  $ventanaPanel.Expand = True
+  $ventanaPanel.Width = Me.Width * 0.20
+  ' --- Panel Superior => controles de ventana => botones
+  btnTmp = New Button($ventanaPanel) As "btnCerrar"
+  btnTmp.Picture = Picture.Load("img/btns/open16x16.png")
+  btnTmp.Background = Color.RGB(108, 193, 242)
+  btnTmp.Resize(16, 16)
+  ' --
+  btnTmp = New Button($ventanaPanel) As "btnTam"
+  btnTmp.Picture = Picture.Load("img/btns/expand16x16.png")
+  btnTmp.Resize(16, 16)
+  ' --
+  btnTmp = New Button($ventanaPanel) As "btnMax"
+  btnTmp.Picture = Picture.Load("img/btns/close16x16.png")
+  btnTmp.Resize(16, 16)
+  ' --- / Panel Superior => controles de ventana
+  
+  ' -- Panel Superior => busquedaPanel
+  $busquedaPanel = New Panel($panelTop) As "busquedaPanel"
+  $busquedaPanel.Arrangement = 1
+  $busquedaPanel.Expand = True
+  $busquedaPanel.Width = Me.Width * 0.60
+  $busquedaPanel.Background = Color.White
+  ' ---
+  txtTemp = New TextBox($busquedaPanel) As "txtBusqueda"
+  txtTemp.Expand = True
+  txtTemp.Font.Size = 7
+  txtTemp.Height = 16
+  
+  btnTmp = New Button($busquedaPanel) As "btnBusqueda"
+  btnTmp.Picture = Picture.Load("img/btns/srch16x16.png")
+  btnTmp.Resize(16, 16)
+  ' ---
+  
+  ' -- Panel Superior => propiedadesPanel
+  $propiedadesPanel = New Panel($panelTop) As "propiedadesPanel"
+  $propiedadesPanel.Arrangement = 1
+  $propiedadesPanel.Padding = 0
+  $propiedadesPanel.Expand = True
+  $propiedadesPanel.Width = Me.Width * 0.20
+  ' -- panel de espacio
+  $busquedaPanel = New Panel($propiedadesPanel)
+  $busquedaPanel.Expand = True
+  '- - -
+  ' -- refrescar libreria
+  btnTmp = New Button($propiedadesPanel) As "btnRefresh"
+  btnTmp.Picture = Picture.Load("img/btns/rfsh16x16.png")
+  btnTmp.Resize(16, 16)
+  ' -- boton de configuracion
+  btnTmp = New Button($propiedadesPanel) As "btnPropiedades"
+  btnTmp.Picture = Picture.Load("img/btns/prop16x16.png")
+  btnTmp.Resize(16, 16)
+  ' -- /Panel Superior => propiedadesPanel
+End
+
+Public Sub btnBusqueda_Click()
+
+  busquedaPlayList(txtTemp.Text)
+  Me.Maximized = True
+  
+End
+
+Public Sub btnTam_Click()
+  
+  grdView.Clear
+  grdView.Rows.Count = 0
+  $reproductor.Stop
+  
+End
+
+
+Public Sub btnPropiedades_Click()
+  
+  FrmPref.Show
+  
+End
+
+Public Sub btnRefresh_Click()
+  
+  llevarTreeView()
+  grdView.Clear
+  grdView.Rows.Count = 0
+  llenarPlaylist("", "")
+  
+End
+
+Public Sub trvLib_DblClick()
+
+  agregarDeLibir(Left$(Last.Key, 1), Right$(Last.Key, Len(Last.Key) - 1))
+
+End
+
+
+Public Sub btnCerrar_Click()
+  
+  Me.Close
+  
+End
+
+Private Function buildMdlPanel()
+  
+  Dim panelTmp As Panel
+  Dim btnTmp As Button
+  Dim tblTmp As TableView
+  
+  ' -- Paneles
+  ' -- Biblioteca
+  panelTmp = New Panel(Me) As "mdlPanel"
+  panelTmp.Arrangement = 1
+  panelTmp.Background = Color.RGB(245, 245, 245, 1)
+  panelTmp.Expand = True
+  
+  ' -- panel de busqueda
+  panelTmp = New Panel(panelTmp) As "rgtPanel"
+  panelTmp.Arrangement = 2
+  panelTmp.Padding = 10
+  panelTmp.Width = 450
+  
+  ' -- paneels divisores playlists - libreria
+  panelTmp = New Panel(panelTmp) As "libPanel"
+  panelTmp.Arrangement = 2
+  panelTmp.Expand = True
+  
+  trvView = New TreeView(panelTmp) As "trvLib"
+  trvView.Expand = True
+  trvView.Background = Color.RGB(245, 245, 245, 1)
+  trvView.Border = False
+  llevarTreeView
+  
+  ' listView Listas
+  panelTmp = New Panel(panelTmp.Parent) As "libPanel"
+  panelTmp.Arrangement = 2
+  panelTmp.Height = 220
+  panelTmp.Padding = 20
+  
+  
+  lblCancion = New Label(panelTmp) As "lblCancion"
+  lblCancion.Height = 20
+  lblCancion.Alignment = 3
+  lblCancion.Text = "Informacion"
+  
+  grdViewTags = New GridView(panelTmp) As "grdViewTags"
+  grdViewTags.Expand = True
+  grdViewTags.Border = True
+  grdViewTags.Columns.Count = 2
+  grdViewTags.Columns[0].Expand = True
+  grdViewTags.Columns[1].Expand = True
+  grdViewTags.Rows.Count = 7
+  grdViewTags.Background = Color.RGB(245, 245, 245, 1)
+  
+  panelTmp = New Panel(panelTmp.Parent.Parent) As "tblVPanel"
+  panelTmp.Expand = True
+  panelTmp.Arrangement = 2
+  panelTmp.Padding = 20
+  
+  
+  
+  grdView = New GridView(panelTmp) As "grdPlaylist"
+  grdView.Expand = True
+  grdView.Background = Color.RGB(245, 245, 245, 1)
+  grdView.Border = True
+  grdView.Header = GridView.Horizontal
+  grdView.Columns.Count = 3
+  grdView.Rows.Count = 0
+  grdView.Columns[0].Expand = True
+  grdView.Columns[0].Text = "Cancion"
+  grdView.Columns[0].Alignment = 0
+  grdView.Columns[1].Expand = True
+  grdView.Columns[1].Text = "Album"
+  grdView.Columns[1].Alignment = 0
+  grdView.Columns[2].Expand = True
+  grdView.Columns[2].Text = "Artista"
+  grdView.Columns[2].Alignment = 0
+  
+  llenarPlaylist("", "")
+  ' 
+  ' panelTmp = New Panel(panelTmp.Parent) As "fooPanel"
+  ' panelTmp.Width = 350
+  ' panelTmp.Arrangement = 2
+  ' panelTmp.Padding = 10
+  ' 
+  ' panelTmp = New Panel(panelTmp) As "barPanel"
+  ' panelTmp.Expand = True 
+  ' panelTmp.Arrangement = 2
+  ' 
+  
+End
+
+Public Sub grdPlaylist_DblClick()
+  
+  'Reproductor.reproducir(...)
+  reproducir(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))
+  llenarEtiquetas(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))
+  Exec ["notify-send", "<br/><b>" & grdView[grdView.Row, 0].Text & "</b><br/>" & grdView[grdView.Row, 1].Text & "<br/>" & grdView[grdView.Row, 2].Text]
+  
+End
+
+
+
+Private Function buildBtmPanel()
+  
+  Dim panelTmp As Panel
+  Dim btmPanelTmp As Panel
+  Dim btnTmp As Button
+  Dim sldTmp As Slider
+  Dim tblTmp As TableView
+  
+  ' -- Paneles
+  ' -- Biblioteca
+  btmPanelTmp = New Panel(Me) As "btmPanel"
+  btmPanelTmp.Arrangement = 1
+  btmPanelTmp.Height = 50
+  btmPanelTmp.Background = Color.RGB(240, 240, 240)
+  
+  ' -- Controles de Reproductor
+  panelTmp = New Panel(btmPanelTmp) As "controlPanel"
+  panelTmp.Arrangement = 1
+  panelTmp.Padding = 2
+  panelTmp.Expand = True
+  panelTmp.Width = Me.Width * 20
+  
+  ' -- Botones de Controlador
+  btnTmp = New Button(panelTmp) As "btnMediaControl"
+  btnTmp.Name = "prev"
+  btnTmp.Picture = Picture.Load("img/btns/prev48x48.png")
+  btnTmp.Resize(48, 48)
+  
+  btnTmp = New Button(panelTmp) As "btnMediaControl"
+  btnTmp.Name = "play"
+  btnTmp.Picture = Picture.Load("img/btns/play48x48.png")
+  btnTmp.Resize(48, 48)
+  
+  btnTmp = New Button(panelTmp) As "btnMediaControl"
+  btnTmp.Name = "next"
+  btnTmp.Picture = Picture.Load("img/btns/next48x48.png")
+  btnTmp.Resize(48, 48)
+  
+  panelTmp = New Panel(panelTmp)
+  panelTmp.Expand = True
+  
+  ' -- slider
+  panelTmp = New Panel(btmPanelTmp) As "sliderPanel"
+  panelTmp.Arrangement = 1
+  panelTmp.Padding = 2
+  panelTmp.Expand = True
+  panelTmp.Width = Me.Width * 70
+  
+  ' --
+  
+  sldTmp = New Slider(panelTmp) As "sliderCntrl"
+  sldTmp.Height = btmPanelTmp.Height
+  sldTmp.Expand = True 
+  
+  
+  ' -- opt
+  panelTmp = New Panel(btmPanelTmp) As "optPanel"
+  panelTmp.Arrangement = 1
+  panelTmp.Padding = 2
+  panelTmp.Expand = True
+  
+  panelTmp = New Panel(panelTmp)
+  panelTmp.Expand = True
+  
+  btnTmp = New Button(panelTmp.Parent) As "btnMediaOpt"
+  btnTmp.Name = "repetir"
+  btnTmp.Picture = Picture.Load("img/btns/rept48x48.png")
+  btnTmp.Resize(48, 48)
+  
+  btnTmp = New Button(panelTmp.Parent) As "btnMediaOpt"
+  btnTmp.Name = "shuffle"
+  btnTmp.Picture = Picture.Load("img/btns/shfl48x48.png")
+  btnTmp.Resize(48, 48)
+  
+  btnTmp = New Button(panelTmp.Parent) As "btnMediaOpt"
+  btnTmp.Name = "stop"
+  btnTmp.Picture = Picture.Load("img/btns/stop48x48.png")
+  btnTmp.Resize(48, 48)
+  
+End
+
+
+' TODO : Remplazar por una funcion conjunta
+Public Sub btnMediaControl_Click()
+  
+  mediaControlAccion(Last.Name)
+  
+End
+
+Private Sub mediaControlAccion(name As String)
+  
+  If grdView.Rows.Count >= 1 Then
+    Select name
+      Case "play"
+        ' ... Reproductor.cambiarPausa() ...
+        If cambiarPausa() Then
+          Last.Picture = Picture.Load("img/btns/play48x48.png") 
+        Else
+          Last.Picture = Picture.Load("img/btns/paus48x48.png")
+        Endif
+        
+        If grdView.Row < 0 Then 
+          grdView.Row = 0 
+          ' Reproductor.reproducir(...)
+          reproducir(Datos.obtenerId("Cancion", grdView[0, 0].Text))
+        Endif
+        
+      Case "prev"
+        If grdView.Row > 0 Then
+          ' Reproductor.reproducir(...)
+          reproducir(Datos.obtenerId("Cancion", grdView[grdView.Row - 1, 0].Text))
+          grdView.Row -= 1
+        Else
+          If grdView.Row = 0 Then
+            ' Reproductor.reproducir(...)
+            reproducir(Datos.obtenerId("Cancion", grdView[0, 0].Text))
+          Endif
+        Endif
+      Case "next"
+        If grdView.Row >= 0 And grdView.Row <> (grdView.Rows.Count - 1) Then
+          ' Reproductor.reproducir(...)
+          reproducir(Datos.obtenerId("Cancion", grdView[grdView.Row + 1, 0].Text))
+          grdView.Row += 1
+        Else
+          If grdView.Row < 0 Then
+            grdView.Row = 0
+          Endif
+          ' Reproductor.reproducir(...)
+          reproducir(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))
+        Endif
+      Case Else
+        Return
+    End Select
+    
+    llenarEtiquetas(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))  
+    
+    ' TODO: Mejorar notificaciones
+    Exec ["notify-send", "<br/><b>" & grdView[grdView.Row, 0].Text & "</b><br/>" & grdView[grdView.Row, 1].Text & "<br/>" & grdView[grdView.Row, 2].Text]
+  Endif
+  
+End
+
+
+
+Private Function llevarTreeView()
+  
+  Dim rsArtista As Result
+  Dim rsAlbum As Result
+  Dim rsCancion As Result
+  
+  trvView.Clear()
+  
+  rsArtista = Datos.obtener("Artista", [""], "", "", [""])
+  
+  For Each rsArtista
+    trvView.Add("a" & rsArtista!id, rsArtista!nombreArtista, Picture.Load("img/btns/arts16x16.png"))
+    rsAlbum = Datos.obtener("Album", [""], "idArtista", rsArtista!id, [""])
+    For Each rsAlbum
+      trvView.Add("m" & rsAlbum!id, rsAlbum!nombreAlbum, Picture.Load("img/btns/albm16x16.png"), "a" & rsArtista!id)
+      rsCancion = Datos.obtener("Cancion", [""], "idAlbum", rsAlbum!id, [""])
+      For Each rsCancion
+        trvView.Add("c" & rsCancion!id, rsCancion!titulo, Picture.Load("img/btns/musc16x16.png"), "m" & rsAlbum!id)
+      Next
+    Next
+  Next
+  
+End
+
+Private Function llenarPlaylist(tabla As String, id As String)
+  
+  Dim $result As Result
+  Dim $resultPivot As Result
+  Dim llave As String
+  
+  Dim cancion As String
+  Dim artista As String
+  Dim album As String
+  
+  Select tabla
+    Case "Artista"
+      llave = "idArtista"
+    Case "Album"
+      llave = "idAlbum"
+    Case Else
+      llave = ""
+  End Select
+  
+  $result = Datos.obtener("Cancion", [""], llave, id, [""])
+  
+  For Each $result
+      
+      grdView.Rows.Count += 1
+      grdView[grdView.Rows.Count - 1, 0].Text = $result!titulo
+      $resultPivot = Datos.obtener("Album", ["nombreAlbum"], "id", $result!idAlbum, [""])
+      grdView[grdView.Rows.Count - 1, 1].Text = $resultPivot!nombreAlbum
+      $resultPivot = Datos.obtener("Artista", ["nombreArtista"], "id", $result!idArtista, [""])
+      grdView[grdView.Rows.Count - 1, 2].Text = $resultPivot!nombreArtista
+      ' agregarPlayList(cancion, artista, album)
+      
+  Next
+  
+End
+
+Private Function agregarPlayList(cancion As String, artista As String, album As String)
+  ' 
+  ' Debug grdView.Rows.Count
+  ' Debug "Artista : " & Datos.obtenerId("Artista", artista)
+  ' Debug "Cancion : " & Datos.obtenerId("Cancion", cancion)
+  ' Debug "Album : " & Datos.obtenerId("Album", album)
+  ' 
+  
+  
+  grdView.Rows.Count += 1
+  
+  grdView[grdView.Rows.Count - 1, 0].Text = cancion
+  grdView[grdView.Rows.Count - 1, 1].Text = artista
+  grdView[grdView.Rows.Count - 1, 2].Text = album  
+  
+End
+
+Private Function busquedaPlayList(texto As String)
+  
+  Dim idArtistas As String[]
+  Dim idAlbums As String[]
+  Dim idCanciones As String[]
+
+  Dim cancion As String
+  Dim album As String
+  Dim artista As String 
+  
+  Dim $result As Result
+  Dim $resultPivot As Result
+  Dim $resultPivot2 As Result
+  
+  Dim foo As String
+  
+  grdView.Clear
+  grdView.Rows.Count = 0
+  
+  idArtistas = New String[]
+  idCanciones = New String[]
+  idAlbums = New String[]
+  
+  
+  ' --
+  ' TODO: Utilizar busqueda binaria.
+  
+  $result = Datos.obtenerLike("Artista", texto)
+  
+  Debug $result.Count
+  
+  If $result.Available Then
+    
+    For Each $result
+      
+      idArtistas.Add($result!id)
+      
+      $resultPivot = Datos.obtener("Cancion", [""], "idArtista", $result!id, [""])
+      
+      For Each $resultPivot
+        
+        idCanciones.Add($resultPivot!id)
+        cancion = $resultPivot!titulo
+        $resultPivot2 = Datos.obtener("Artista", ["nombreArtista"], "id", $resultPivot!idArtista, [""])
+        artista = $resultPivot2!nombreArtista
+        $resultPivot2 = Datos.obtener("Album", ["nombreAlbum"], "id", $resultPivot!idAlbum, [""])
+        album = $resultPivot2!nombreAlbum
+      
+        agregarPlayList(cancion, artista, album)
+        
+      Next
+      
+    Next
+    
+  Endif
+  
+  $result = Datos.obtenerLike("Album", texto)
+  
+  If $result.Available Then
+  
+    For Each $result 
+      
+      idAlbums.Add($result!id)
+      
+      $resultPivot = Datos.obtener("Cancion", [""], "idAlbum", $result!id, [""])
+      
+      For Each $resultPivot
+        
+        idCanciones.Add($resultPivot!id)
+        cancion = $resultPivot!titulo
+        $resultPivot2 = Datos.obtener("Artista", ["nombreArtista"], "id", $resultPivot!idArtista, [""])
+        artista = $resultPivot2!nombreArtista
+        $resultPivot2 = Datos.obtener("Album", ["nombreAlbum"], "id", $resultPivot!idAlbum, [""])
+        album = $resultPivot2!nombreAlbum
+        
+        Debug "Artista => " & $resultPivot!idArtista
+        
+        ' If idArtistas.Find($resultPivot!idArtista, 0, 0) > 0 Then
+          agregarPlayList(cancion, artista, album)        
+        ' Endif
+  
+      Next
+      
+    Next
+    
+  Endif
+  
+  $result = Datos.obtenerLike("Cancion", texto)
+  
+  If $result.Available Then
+    
+    For Each $result
+      
+      idCanciones.Add($result!id)
+      cancion = $result!titulo
+      $resultPivot = Datos.obtener("Artista", ["nombreArtista"], "id", $result!idArtista, [""])
+      artista = $resultPivot!nombreArtista
+      $resultPivot = Datos.obtener("Album", ["nombreAlbum"], "id", $result!idAlbum, [""])
+      album = $resultPivot!nombreAlbum
+      
+      Debug "\n Canciones \n \t Artista => " & $result!idArtista & " \n Album => " & $result!idAlbum
+        
+      'If idArtistas.Find($result!idArtista, 0, 0) > 0 And idAlbums.Find($result!idAlbum, 0, 0) > 0 Then
+          agregarPlayList(cancion, artista, album)        
+      'Endif
+      
+    Next
+    
+  Endif
+  
+End
+
+Private Function agregarDeLibir(tabla As String, id As String)
+  
+  Dim $result As Result
+  Dim $resultPivot As Result
+  
+  Dim artista As String
+  Dim album As String
+  Dim cancion As String
+  Dim pivotString As String
+
+  Select tabla
+    Case "a"
+
+      $result = Datos.obtener("Cancion", [""], "idArtista", id, [" ORDER BY numeroCancion"])
+      ' -----
+      $resultPivot = Datos.obtener("Cancion", [""], "idArtista", id, [" LIMIT 1"])
+      pivotString = $resultPivot!idArtista
+
+      $resultPivot = Datos.obtener("Artista", [""], "id", pivotString, [""])
+      artista = $resultPivot!nombreArtista
+
+      $resultPivot = Datos.obtener("Album", [""], "idArtista", $resultPivot!id, [""])
+      
+
+      For Each $resultPivot
+        For Each $result
+          
+          If $resultPivot!id = $result!idAlbum Then
+          album = $resultPivot!nombreAlbum  
+          cancion = $result!titulo
+          agregarPlayList(cancion, album, artista)  
+        Endif
+          
+        Next
+          
+      Next
+      
+    Case "m"
+    
+      $result = Datos.obtener("Album", [""], "id", id, [""])
+      
+      For Each $result
+        
+        $resultPivot = Datos.obtener("Artista", [""], "id", $result!idArtista, [""])
+        artista = $resultPivot!nombreArtista
+        $resultPivot = Datos.obtener("Cancion", [""], "idAlbum", $result!id, [" ORDER BY numeroCancion"])
+        album = $result!nombreAlbum
+        
+        For Each $resultPivot
+          
+          cancion = $resultPivot!titulo       
+          agregarPlayList(cancion, artista, album)
+          
+        Next
+        
+      Next
+    
+    Case "c"
+      
+      $result = Datos.obtener("Cancion", [""], "id", id, [" ORDER BY numeroCancion"])
+      cancion = $result!titulo
+      $resultPivot = Datos.obtener("Album", [""], "id", $result!idAlbum, [""])
+      album = $resultPivot!nombreAlbum
+      $resultPivot = Datos.obtener("Artista", [""], "id", $result!idArtista, [""])
+      artista = $resultPivot!nombreArtista
+      
+      agregarPlayList(cancion, artista, album)
+
+  End Select
+    
+End
+
+Public Sub Form_Close()
+
+  'Reproductor.pararReproduccion()
+  pararReproduccion()
+  Preferencias.cerrar()
+  Datos.cerrar()
+
+End
+
+Public Sub llenarEtiquetas(id As String)
+  
+  Dim $result As Result
+  Dim $resultPivot As Result
+  
+  grdViewTags.Clear
+  
+  Debug " id => " & id
+  
+  $result = Datos.obtener("Cancion", [""], "id", id, [""]) 
+  grdViewTags[0, 0].Text = "Cancion"
+  grdViewTags[0, 1].Text = $result!titulo
+   
+  grdViewTags[1, 0].Text = "Artista"
+  $resultPivot = Datos.obtener("Artista", ["id", "nombreArtista"], "id", $result!idArtista, [""]) 
+  grdViewTags[1, 1].Text = $resultPivot!nombreArtista
+  
+  grdViewTags[2, 0].Text = "Album"
+  $resultPivot = Datos.obtener("Album", ["id", "nombreAlbum"], "id", $result!idAlbum, [""]) 
+  grdViewTags[2, 1].Text = $resultPivot!nombreAlbum
+
+  grdViewTags[3, 0].Text = "Genero"
+  $resultPivot = Datos.obtener("Genero", ["id", "nombreGenero"], "id", $result!idGenero, [""]) 
+  If $resultPivot.Available Then 
+    grdViewTags[3, 1].Text = $resultPivot!nombreGenero
+  Else
+    grdViewTags[3, 1].Text = "Desconocido"
+  Endif
+  
+  grdViewTags[4, 0].Text = "Track:"
+  grdViewTags[4, 1].Text = $result!numeroCancion
+    
+  grdViewTags[5, 0].Text = "Bit Rate:"
+  grdViewTags[5, 1].Text = $result!bitrate & "kbps."
+  
+  grdViewTags[6, 0].Text = "Duracion :"
+  grdViewTags[6, 1].Text = CStr(CFloat($result!duracion) / 100)
+  
+End
+
+' Reproductor
+
+Private Function reproducir(id As Integer) 
+  Dim $result As Result
+  
+  $result = Datos.obtener("Cancion", ["idDirectorio"], "id", CString(id), [""])
+  $reproductor.Stop
+  $result = Datos.obtener("Directorio", ["directorio"], "id", $result!idDirectorio, [""])
+
+  If Exist($result!directorio) Then
+    $reproductor.URL = Media.URL($result!directorio)
+    $reproductor.Play  
+  Else
+    Debug $result!directorio
+  Endif
+
+End
+
+Private Function cambiarPausa() As Boolean
+  
+  Dim estado As Boolean
+  
+  If $reproductor.State = $reproductor.Paused Then
+    Try $reproductor.Play
+    estado = True
+  Else
+    Try $reproductor.Pause
+    estado = False
+  Endif
+  
+  Return estado
+  
+End
+
+Private Function pararReproduccion()
+  
+  $reproductor.Stop
+  
+End
+
+Public Sub Reproductor_Tag(TagList As MediaTagList)
+  
+  ' Dim sTag As String
+  ' Dim vTag As Variant
+  ' Dim I As Integer
+  ' 
+  ' For Each sTag In TagList.Tags
+  '   vTag = TagList[sTag]
+  '   If TypeOf(vTag) = gb.Object And If vTag Is Array Then
+  '     For I = 0 To vTag.Max
+  '       Debug sTag & "[" & CStr(I) & "]", Str(vTag[I])
+  '     Next
+  '   Else
+  '     Debug sTag, Str(vTag)
+  '   Endif
+  ' Next
+  ' 
+End
+
+' Evento duracion del reproductor 
+Public Sub Reproductor_Progress()
+
+  Debug $reproductor.Position & " <= Playing"
+
+End
+
+
+Private Function asigVentana($container As DrawingArea)
+  
+  $reproductor.SetWindow($container)
+  
+End
+
+
+Public Sub trvLib_Menu()
+
+  Dim respuesta As Integer
+  ' Almacenara el tipo de elemento
+  ' para mostar este en el mensaje
+  Dim elemento As String 
+  ' Nombre de la tabla de acuerdo al elemento
+  ' TODO: considerar guardar la llave del arbol como <Tabla><Id>
+  Dim tabla As String
+  ' Id del elemento
+  Dim id As String
+  ' Se "mueve" el trvView.Item, al 
+  ' elemento seleccionado
+  trvView.MoveCurrent
+  
+  ' Se evalua que "tipo" de elemento
+  ' es. (Artista, Album o Cancion)
+   
+   If Last.Key <> Null Then
+     
+     id = Right$(trvView.Item.Key, Len(Last.Key) - 1)
+     
+     Select Left$(trvView.Key, 1)
+       Case "a"
+         elemento = "del artista?\n" 
+         tabla = "Artista"
+       Case "m"
+         elemento = "del album?\n"
+         tabla = "Album"
+       Case "c"
+         elemento = "de la cancion?\n"
+         tabla = "Cancion"
+     End Select
+     
+    respuesta = Message.Question("Editar la informacion " & elemento & trvView.Item.Text, "Si", "No")
+    
+    Select respuesta
+      Case 1
+        editarInfo(tabla, id)
+      Case 2
+        ' Break ?
+        Debug "No hay nada mas que hacer"
+    End Select
+    
+  Endif
+End
+
+
+Private Sub editarInfo(tabla As String, id As String)
+  
+  FrmEditInfo.Editar(tabla, id)
+  
+End

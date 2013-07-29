@@ -1,0 +1,37 @@
+' Gambas class file
+
+' @Utiles
+' Esta clase almacena funciones estaticas
+' que suponen ser de utilidad frecuentemente
+
+' Opciones de orden sobre elementos en contendores (paneles...): 
+  ' 1 => Horizontal
+  ' 2 => Vertical
+  ' 3 => Columnas
+  ' 4 => Filas
+  ' 5 => Llenar
+
+' Opciones de alineacion de elementos
+'   1 => Derecha
+'   2 => Izquierda
+'   3 => Centro
+
+' gb.settings
+' PUBLIC SUB ShowASpecialSetting()
+'   Dim prhOtherConfFile As Settings
+'   Dim prhLangUsed As String
+' 
+'   ' Read a setting from a file used by another application
+'   ' located in /home/user/.config/otherapp/
+'   ' and named "international.conf"
+'   'First create a new instance of Settings class
+'   'with the full path to desired file
+'   prhOtherConfFile = New Settings("/home/user/.config/otherapp/international.conf")
+'   'next read the "Lang1" value from the "UserPreferences" section
+'   prhLangUsed = prhOtherConfFile["UserPreferences/Lang1", Null]
+'   If IsNull(prhLangUsed) Then
+'     Message.Info("No Lang1 found in conf file (or no Section named UserPreferences)")
+'   Else
+'     Message.Info("The value of Lang1 that found in conf file is:\n" & prhLangUsed)
+'   End If
+' End

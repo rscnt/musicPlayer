@@ -1,0 +1,89 @@
+' Gambas class file
+
+' NO UTILIZADA
+' @Reproductor
+' Esta clase contendra las funciones para
+' cada accion que tenga relacion
+' con el reproductor de musica
+' desde importar un archivo de audio hasta el metodo de
+' filtrado de estos
+' Esta clase se eliminaron sus propiedades y elementos 
+' se integraran a la clase Fmain.class en orden
+' de utilizar los eventos de la clase MediaPlayer.
+Private $reproductor As MediaPlayer
+
+Public Sub _new()
+  
+  $reproductor = New MediaPlayer As "Reproductor"
+  
+End
+
+Public Function reproducir(id As Integer) 
+  Dim $result As Result
+  
+  $result = Datos.obtener("Cancion", ["idDirectorio"], "id", CString(id), [""])
+  $reproductor.Stop
+  $result = Datos.obtener("Directorio", ["directorio"], "id", $result!idDirectorio, [""])
+  If Exist($result!directorio) Then
+    $reproductor.URL = Media.URL($result!directorio)
+    $reproductor.Play  
+  Else
+    Debug $result!directorio
+  Endif
+
+End
+
+Public Function cambiarPausa() As Boolean
+  
+  Dim estado As Boolean
+  
+  If $reproductor.State = $reproductor.Paused Then
+    Try $reproductor.Play
+    estado = True
+  Else
+    Try $reproductor.Pause
+    estado = False
+  Endif
+  
+  Return estado
+  
+End
+
+Public Function parar()
+  
+  $reproductor.Stop
+  
+End
+
+Public Function obtenerReproductor() As MediaPlayer
+  
+  Return $reproductor
+  
+End
+
+' Public Sub Reproductor_Tag(TagList As MediaTagList)
+'   
+'   Dim sTag As String
+'   Dim vTag As Variant
+'   Dim I As Integer
+'   
+'   For Each sTag In TagList.Tags
+'     vTag = TagList[sTag]
+'     If TypeOf(vTag) = gb.Object And If vTag Is Array Then
+'       For I = 0 To vTag.Max
+'         agregarEtiqueta(sTag & "[" & CStr(I) & "]", Str(vTag[I]))
+'       Next
+'     Else
+'       agregarEtiqueta(sTag, Str(vTag))
+'     Endif
+'   Next
+'   
+' End
+
+
+Public Function asigVentana($container As DrawingArea)
+  
+  $reproductor.SetWindow($container)
+  
+End
+

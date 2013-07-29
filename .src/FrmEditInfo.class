@@ -1,0 +1,85 @@
+' Gambas class file
+
+
+Public Sub Editar(tabla As String, id As String)
+
+  Select tabla
+    Case "Artista"
+      Me.Show
+      Me.Center
+      Me.Title = "Editar información"
+  End Select
+  
+End
+
+Public Sub TextEdit1_Cursor()
+
+  
+End
+
+Public Sub btnBold_Click()
+
+End
+
+Public Sub btnItalic_Click()
+
+
+End
+
+Public Sub btnUnderline_Click()
+
+
+End
+
+Public Sub btnStrikeOut_Click()
+
+
+End
+
+
+Public Sub btnAlignLeft_Click()
+
+
+End
+
+
+Public Sub btnAlignCenter_Click()
+
+
+End
+
+Public Sub btnAlignRight_Click()
+
+
+End
+
+Public Sub ColorButton1_Change()
+
+End
+
+Public Sub SpinBox1_Change()
+
+End
+
+Public Sub ComboBox1_Click()
+
+End
+
+
+Public Sub btnAlignJustify_Click()
+
+End
+
+Public Sub btnLock_Click()
+
+End
+
+Public Sub ColorButton2_Change()
+
+
+End
+
+
+Public Sub Form_Open()
+
+End

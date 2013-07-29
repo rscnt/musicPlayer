@@ -1,0 +1,114 @@
+' Gambas class file
+
+' Esta clase se encargara de manejar las 
+' preferencias que almacenara la aplicacion
+' se usara la clase Settings del componente : gb.settings
+' TODO: Hacer una clase mas flexible
+' TODO: Implementar lectura con gambas.db.mysql
+
+Static Private $preferencias As Settings
+' Static Private dbNombre As String
+' Static Private dbServer As String
+' Static Private dbPuerto As String
+' TODO: Hash => password
+' Static Private dbUsuario As String
+' ' Esto deberia ser un hash al menos...
+' Static Private dbPass As String
+
+' TODO: Mejorar
+Static Public Function init() As Boolean
+  Dim path As String
+  Dim $exist As Boolean
+  
+  path = User.Home & "/.musicapp.conf"
+  $preferencias = New Settings(path)
+  $preferencias.Save
+  
+  If Exist(path) Then
+    
+    ' TODO: Comentar porque
+    ' dbNombre = $preferencias["dbNombre"]
+    ' dbServer = $preferencias["dbServer"]
+    ' dbUsuario = $preferencias["dbUsuario"]
+    ' dbPass = $preferencias["dbPass"]
+    ' dbPuerto = $preferencias["dbPuerto"]
+    
+    If $preferencias["dbNombre"] <> Null Then
+      $exist = True
+    Else
+      $exist = False
+    Endif
+    
+  Else
+    
+    $preferencias["fecha-incio"] = Now
+    $preferencias.Save
+    $exist = False
+    
+  Endif
+
+  Return $exist
+  
+End
+
+' TODO: Asegurarse que exista O Escribir una Funcion exite(clave)
+Static Public Function obtener(clave As String) As String
+  
+  Dim valor As String
+  
+  If $preferencias[clave] <> Null Then
+    valor = $preferencias[clave]
+  Else
+    valor = ""
+  Endif
+  
+  Return valor
+  
+End
+
+Static Public Function guardar(clave As String, valor As String) As Boolean 
+  ' TODO: Buscar una mejor manera para evaluar las preferencias
+  Dim $writed As Boolean
+  
+  Select clave
+    Case "dbNombre"
+      $preferencias["dbNombre"] = valor
+      $writed = True
+    Case "dbServer"
+      $preferencias["dbServer"] = valor
+      $writed = True
+    Case "dbUsuario"
+      $preferencias["dbUsuario"] = valor
+      $writed = True
+    Case "dbPass"
+      $preferencias["dbPass"] = valor
+      $writed = True
+    Case "dbPuerto"
+      $preferencias["dbPuerto"] = valor
+      $writed = True
+    Case Else
+      $writed = False
+  End Select
+  
+  If $writed Then $preferencias.Save
+  
+  Return $writed
+  
+End
+
+Static Public Function configurada() As Boolean
+  
+  If $preferencias["dbServer"] = Null And $preferencias["dbNombre"] = Null Then
+    Return False
+  Else
+    Return True
+  Endif
+  
+End
+
+
+Static Public Function cerrar()
+  
+  $preferencias.Save()
+  
+End

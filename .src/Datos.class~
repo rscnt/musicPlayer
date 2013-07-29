@@ -1,0 +1,812 @@
+' Gambas class file
+
+' Clase estatica
+' Esta clase es la encargada de interactuar 
+' con la base de datos, configurada en
+' Preferencias
+' TODO: Definir mejor la clase
+
+Static Private $coneccion As New Connection
+
+' Tablas
+' tblTmp se utiliza para guardar
+' temporalmente la tabla a crear
+Static Private tblTmp As Table
+  
+' Se inicializa la base de datos de acuerdo a las
+' preferencias definidas por el usuario
+Static Public Function init() As Boolean
+  'Dim baseURL As String
+  Dim iniciado As Boolean
+
+  
+  Try $coneccion.Close
+  
+  If Preferencias.configurada() Then
+    ' TODO: evaluar si es mejor armar la url
+    With $coneccion
+      .Type = "mysql"
+      .Host = Preferencias.obtener("dbServer")
+      .Port = Preferencias.obtener("dbPuerto")
+      .Login = Preferencias.obtener("dbUsuario")
+      .Password = Preferencias.obtener("dbPass")
+      .Name = ""
+      '.Name = Preferencias.obtener("dbNombre")
+    End With
+    
+    ' Se crea la base si esta no existe
+    Try $coneccion.Open
+    
+    If Not $coneccion.Databases.Exist(Preferencias.obtener("dbNombre")) Then
+      $coneccion.Databases.Add(Preferencias.obtener("dbNombre"))
+    Endif
+    
+    ' Cerrar la coneccion
+    $coneccion.Close
+  
+    ' Se cambia el nombre al de la base de datos
+    ' a utilizar.
+    $coneccion.Name = Preferencias.obtener("dbNombre")
+    ' Abrir la coneccion para relizar futuras
+    ' transacciones
+    $coneccion.Open
+
+    
+    ' Crea la tabla en la base, si esta no existe.
+    If Not $coneccion.Tables.Exist("Artista") Then
+      tblTmp = $coneccion.Tables.Add("Artista")
+      ' ..Fields.Add(nombre, tipo, duracion, valor por defecto)
+      tblTmp.Fields.Add("id", db.Serial)
+      tblTmp.Fields.Add("nombreArtista", db.String, 255, "Artista Desconocido")
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+      ' Se crea un indice que hace unico el nombre de un Artista
+      tblTmp.Indexes.Add("uniqueNombre", ["nombreArtista"], True)
+    Endif
+    
+    ' verificando tabla imagen
+    If Not $coneccion.Tables.Exist("Imagen") Then
+      tblTmp = $coneccion.Tables.Add("Imagen")
+      tblTmp.Fields.Add("id", db.Serial)
+      tblTmp.Fields.Add("ruta", db.String, 255)
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+      ' Se crea un indice que hace unico el nombre de un Artista
+      tblTmp.Indexes.Add("uniqRuta", ["ruta"], True)
+    Endif
+    
+    ' Verificando la tabla Compositor.
+    If Not $coneccion.Tables.Exist("Compositor") Then
+      tblTmp = $coneccion.Tables.Add("Compositor")
+      ' ..Fields.Add(nombre, tipo, duracion, valor por defecto)
+      tblTmp.Fields.Add("id", db.Serial)
+      tblTmp.Fields.Add("nombreCompositor", db.String, 255, "Compositor Desconocido")
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+      ' Se crea un indice que hace unico el nombre de un Artista
+      tblTmp.Indexes.Add("uniqueNombreCompositor", ["nombreCompositor"], True)
+    Endif    
+    
+    ' Verificando la tabla Genero.
+    If Not $coneccion.Tables.Exist("Genero") Then
+      tblTmp = $coneccion.Tables.Add("Genero")
+      ' ..Fields.Add(nombre, tipo, duracion, valor por defecto)
+      tblTmp.Fields.Add("id", db.Serial)
+      tblTmp.Fields.Add("nombreGenero", db.String, 255, "Genero Desconocido")
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+      ' Se crea un indice que hace unico el nombre de un Artista
+      tblTmp.Indexes.Add("uniqueNombreGenero", ["nombreGenero"], True)
+    Endif
+        
+    ' verificando tabla album
+    If Not $coneccion.Tables.Exist("Album") Then
+      tblTmp = $coneccion.Tables.Add("Album")
+      tblTmp.Fields.Add("id", db.Serial)
+      tblTmp.Fields.Add("nombreAlbum", db.String, 250, "Album Desconocido")
+      ' TODO: Implementar por defecto => 1
+      tblTmp.Fields.Add("idArtista", db.Integer)
+      tblTmp.Fields.Add("idImagen", db.Integer)
+      ' cuando un db.String >= 500 ? pasa a ser TEXT
+      tblTmp.Fields.Add("descripcionAlbum", db.String, 501)
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+      ' Se crea un indice que hace unico el nombre de un Album
+      tblTmp.Indexes.Add("uniqueNombreAlbum", ["nombreAlbum"], True)
+      ' TODO: obviar
+      tblTmp.Indexes.Add("fkArtista", ["idArtista"])
+      tblTmp.Indexes.Add("fkImagen", ["idImagen"])
+    Endif
+    
+    ' Verificando la tabla Dispositivo.
+    If Not $coneccion.Tables.Exist("Dispositivo") Then
+      tblTmp = $coneccion.Tables.Add("Dispositivo")
+      ' ..Fields.Add(nombre, tipo, duracion, valor por defecto)
+      tblTmp.Fields.Add("id", db.Serial)
+      tblTmp.Fields.Add("tipo", db.String, 255)
+      tblTmp.Fields.Add("etiqueta", db.String, 255)
+      tblTmp.Fields.Add("ultimoPuntoMontaje", db.String, 255)
+      tblTmp.Fields.Add("uuid", db.String, 255)
+      tblTmp.Fields.Add("servidor", db.String, 80)
+      tblTmp.Fields.Add("compartido", db.String, 255)
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+    Endif
+
+    ' Verificando la tabla Directorio.
+    If Not $coneccion.Tables.Exist("Directorio") Then
+      tblTmp = $coneccion.Tables.Add("Directorio")
+      ' ..Fields.Add(nombre, tipo, duracion, valor por defecto)
+      tblTmp.Fields.Add("id", db.Serial)
+      ' TODO: Implementar por defecto => 1
+      tblTmp.Fields.Add("idDispositvo", db.Integer)
+      tblTmp.Fields.Add("directorio", db.String, 255)
+      tblTmp.Fields.Add("fechaCambio", db.Integer)
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+      ' Se crea un indice que hace unico la ruta de un Directorio
+      tblTmp.Indexes.Add("uniqueDirectorio", ["directorio"], True)
+    Endif
+
+    ' Verificando la tabla Cancion.
+    If Not $coneccion.Tables.Exist("Cancion") Then
+      tblTmp = $coneccion.Tables.Add("Cancion")
+      ' ..Fields.Add(nombre, tipo, duracion, valor por defecto)
+      tblTmp.Fields.Add("id", db.Serial)
+      ' TODO: Implementar por defecto => 1
+      ' LLaves Foraneas
+      tblTmp.Fields.Add("idArtista", db.Integer)
+      tblTmp.Fields.Add("idGenero", db.Integer)
+      tblTmp.Fields.Add("idCompositor", db.Integer)
+      tblTmp.Fields.Add("idDirectorio", db.Integer)
+      tblTmp.Fields.Add("idAlbum", db.Integer)
+      ' Propiedades de la cancion
+      tblTmp.Fields.Add("titulo", db.String, 255)
+      tblTmp.Fields.Add("comentario", db.String, 501)
+      tblTmp.Fields.Add("numeroCancion", db.Integer)
+      tblTmp.Fields.Add("numeroDisco", db.Integer)
+      tblTmp.Fields.Add("bitrate", db.Integer)
+      tblTmp.Fields.Add("duracion", db.Float)
+      tblTmp.Fields.Add("filesize", db.Integer)
+      ' TODO: Cambiar el tipo de dato en el script tabla.
+      tblTmp.Fields.Add("tipoArchivo", db.String)
+      tblTmp.Fields.Add("bmp", db.Integer)
+      tblTmp.Fields.Add("fechaCreacion", db.Integer)
+      tblTmp.Fields.Add("fechaModificacion", db.Integer)
+      
+      tblTmp.PrimaryKey = ["id"]
+      tblTmp.Update
+    Endif
+    
+    iniciado = True
+    
+  Else
+    
+    iniciado = False
+  
+  Endif
+  
+  Return iniciado
+End
+
+' agregarArtista()
+' Esta funcion agrega un registro de Artista
+' a la base de datos, solo si este no existe y 
+' bla, bla, bla....
+' TODO: Elaborar una mejor descripcion
+Static Public Function agregarArtista(nombre As String) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' @Artista => interactuar con la base Artistas
+  ' Representa un fila de base "Artista"
+  Dim Artista As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  
+  If nombre = Null Or nombre = "" Then nombre = "Artista Desconocido"
+  Artista = $coneccion.Find("Artista", "nombreArtista = &1", nombre)
+  
+  ' si no existe el registro
+  If Artista.Available = False Then
+      
+    Artista = $coneccion.Create("Artista")
+    Artista!nombreArtista = nombre
+    
+    Artista.Update
+    $coneccion.Commit
+    
+    exito = True
+  Else
+    exito = False
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Message.Error(DConv(Error.Text))
+  
+  Return exito
+End
+
+' TODO: Crear una funcion para insertar en tablas independientes
+
+' agregarImagen()
+' Verfica si existe el Artista, sino lo agrega
+' Agrega un registro a la tabla album
+' ...
+Static Public Function agregarImagen(ruta As String) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' Resutl@Imagen=> interactuar con la base Artistas
+  ' Representa un fila de base "Artista"
+  Dim Imagen As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  Imagen = $coneccion.Find("Imagen", "ruta = &1", ruta)
+  
+  ' si no existe el registro
+  If Imagen.Available = False Then
+      
+    Imagen = $coneccion.Create("Imagen")
+    Imagen!ruta = ruta
+    
+    Imagen.Update
+    $coneccion.Commit
+    
+    exito = True
+  Else
+    exito = False
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Message.Error(DConv(Error.Text))
+  
+  Return exito
+End
+
+' TODO: Crear una funcion para insertar en tablas independientes
+
+' agregarDirectorio()
+' Verfica si existe el Directorio, sino lo agrega
+' Agrega un registro a la tabla album
+' ...
+Static Public Function agregarDirectorio(ruta As String) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' Resutl@Imagen=> interactuar con la base Artistas
+  ' Representa un fila de base "Artista"
+  Dim Directorio As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  Directorio = $coneccion.Find("Directorio", "directorio = &1", ruta)
+  
+  ' si no existe el registro
+  If Directorio.Available = False Then
+      
+    Directorio = $coneccion.Create("Directorio")
+    Directorio!idDispositvo = 0
+    Directorio!directorio = ruta
+    
+    Directorio.Update
+    $coneccion.Commit
+    
+    exito = True
+  Else
+    exito = False
+  
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Message.Error(DConv(Error.Text))
+  
+  Return exito
+End
+
+' agregarCompositor()
+' Verfica si existe el Artista, sino lo agrega
+' Agrega un registro a la tabla album
+' ...
+Static Public Function agregarCompositor(nombre As String) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' Resutl@Compositor => interactuar con la tabla
+  ' Representa un fila de base "Compositor"
+  Dim Compositor As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  Compositor = $coneccion.Find("Compositor", "nombreCompositor = &1", nombre)
+  
+  ' si no existe el registro
+  If Compositor.Available = False Then
+      
+    Compositor = $coneccion.Create("Compositor")
+    Compositor!nombreCompositor = nombre
+    
+    Compositor.Update
+    $coneccion.Commit
+    exito = True
+  Else
+    exito = False
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Message.Error(DConv(Error.Text))
+  Return exito
+End
+
+' agregarGenero()
+' Verfica si existe el Artista, sino lo agrega
+' Agrega un registro a la tabla album
+' ...
+Static Public Function agregarGenero(nombre As String) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' Resutl@Genero => interactuar con la tabla
+  ' Representa un fila de base "Genero"
+  Dim Genero As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  Genero = $coneccion.Find("Genero", "nombreGenero = &1", nombre)
+  
+  ' si no existe el registro
+  If Genero.Available = False Then
+      
+    Genero = $coneccion.Create("Genero")
+    Genero!nombreGenero = nombre
+    
+    Genero.Update
+    $coneccion.Commit
+    
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Message.Error(DConv(Error.Text))
+
+End
+
+' agregarAlbum()
+' Verfica si existe el Artista, sino lo agrega
+' Agrega un registro a la tabla album
+' @parametro fk => ["artista", "ruta imagen"]
+' ...
+Static Public Function agregarAlbum(nombre As String, descripcion As String, fk As String[]) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' Resutl@Album => interactuar con la tabla
+  ' Representa un fila de base "Album"
+  Dim Album As Result
+  ' Llaves foraneas
+  Dim fkArtista As Result
+  Dim fkImagen As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  If nombre = Null Or nombre = "" Then nombre = "Album Desconocido"
+  Album = $coneccion.Find("Album", "nombreAlbum = &1", nombre)
+  
+  ' si no existe el registro
+  If Album.Available = False Then
+    
+    ' TODO: Mejorar la busqueda
+    fkArtista = $coneccion.Find("Artista", "nombreArtista = &1", fk[0])
+    
+    If fkArtista.Available = False Then
+      agregarArtista(fk[0])
+      fkArtista = $coneccion.Find("Artista", "nombreArtista = &1", fk[0])
+    Endif
+    
+    Album = $coneccion.Create("Album")
+    Album!nombreAlbum = nombre
+    Album!idArtista = fkArtista!id
+    Album!descripcionAlbum = descripcion
+    Album.Update
+    $coneccion.Commit
+    
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Message.Error(DConv(Error.Text))
+
+End
+
+' agregarAlbum()
+' Verfica si existe el Artista, sino lo agrega
+' Agrega un registro a la tabla album
+' @parametro Integer[] : archivo => [numeroCancion, numeroDisco, bitrate, duracion, filesize, bmp]
+' @parametro fk => ["artista", "album", "genero", "compositor"]
+' ...
+Static Public Function agregarCancion(titulo As String, comentario As String, tipo As String, archivo As Integer[], fk As String[]) As Boolean
+  
+  Dim exito As Boolean
+  ' Variables para interactuar con la
+  ' base de datos.
+  ' Resutl@Cancion => interactuar con la tabla
+  ' Representa un fila de base "Cancion"
+  Dim Cancion As Result
+  ' Llaves foraneas
+  Dim fkArtista As Result
+  Dim fkAlbum As Result
+  Dim fkGenero As Result
+  Dim fkCompositor As Result
+  Dim fkDirectorio As Result
+  ' Incrementar esta propiedad cuanto se efectuen 
+  ' tareas pesadas para evitar que se *pegue* la aplicacion
+  Inc Application.Busy
+  
+  ' Connection.Begin => Permite iniciar una transaccion con la base
+  $coneccion.Begin
+  ' Se instancia Artista como un nuevo registro de 
+  ' la tabla Artista.
+  
+  Cancion = $coneccion.Find("Cancion", "titulo = &1", titulo)
+  
+  ' si no existe el registro
+  If Cancion.Available = False Then
+    
+    ' TODO: Mejorar la busqueda**2
+    fkArtista = $coneccion.Find("Artista", "nombreArtista = &1", fk[0])
+    If fkArtista.Available = False Then
+      agregarArtista(fk[0])
+      fkArtista = $coneccion.Find("Artista", "nombreArtista = &1", fk[0])
+    Endif
+    
+    ' TODO: Mejorar la busqueda**3
+    fkAlbum = $coneccion.Find("Album", "nombreAlbum = &1", fk[1])
+    If fkAlbum.Available = False Then
+      agregarAlbum(fk[1], "", [fk[0], ""])
+      fkAlbum = $coneccion.Find("Album", "nombreAlbum = &1", fk[1])
+    Endif
+    
+    
+    ' TODO: Mejorar la busqueda**4
+    fkGenero = $coneccion.Find("Genero", "nombreGenero = &1", fk[2])
+    If fkGenero.Available = False Then
+      agregarGenero(fk[2])
+      fkGenero = $coneccion.Find("Genero", "nombreGenero = &1", fk[2])
+    Endif
+    
+    ' TODO: Mejorar la busqueda**5
+    fkCompositor = $coneccion.Find("Compositor", "nombreCompositor = &1", fk[3])
+    If fkCompositor.Available = False Then
+      agregarCompositor(fk[3])
+      fkCompositor = $coneccion.Find("Compositor", "nombreCompositor = &1", fk[3])
+    Endif
+    
+    ' TODO: Mejorar la busqueda**6
+    fkDirectorio = $coneccion.Find("Directorio", "Directorio = &1", fk[4])
+    If fkDirectorio.Available = False Then
+      agregarDirectorio(fk[4])
+      fkDirectorio = $coneccion.Find("Directorio", "Directorio = &1", fk[4])
+    Endif
+    
+    Cancion = $coneccion.Create("Cancion")
+    ' foreaneas
+    Cancion!idArtista = fkArtista!id
+    Cancion!idAlbum = fkAlbum!id
+    Cancion!idGenero = fkGenero!id
+    Cancion!idCompositor = fkCompositor!id
+    Cancion!idDirectorio = fkDirectorio!id
+    Cancion!titulo = titulo
+    Cancion!comentario = comentario
+    Cancion!numeroCancion = archivo[0]
+    Cancion!numeroDisco = archivo[1]
+    Cancion!bitrate = archivo[2]
+    Cancion!duracion = archivo[3]
+    Cancion!filesize = archivo[4]
+    Cancion!tipoArchivo = tipo
+    Cancion!bmp = archivo[5] 
+    Cancion.Update
+    $coneccion.Commit
+    
+  Endif
+  
+  Finally
+    ' Se "libera memoria"
+    Dec Application.Busy
+  
+  ' En caso de error en la transaccion
+  Catch
+    $coneccion.Rollback
+    Debug Error.Backtrace
+    Debug DConv(Error.Text)
+
+End
+
+' AgregarArchivo()
+' Agrega una "cancion" a la base de datos.
+' @param String dir : el directorio del archivo de audio.
+' @returns 
+Static Public Sub agregarArchivo(directorio As String)
+  
+  ' Propiedades de la cancion
+  Dim artista As String
+  Dim album As String
+  Dim genero As String
+  Dim compositor As String
+  Dim titulo As String
+  ' propiedades adicionales
+  Dim comentario As String
+  Dim numeroCancion As Integer
+  Dim numeroDisco As Integer
+  Dim bitRate As Integer
+  Dim duracion As Float
+  ' propiedades del archivo
+  Dim rutaArchivo As String
+  Dim sizeArchivo As Integer
+  Dim tipoArchivo As String
+  Dim nombreArchivo As String
+
+  
+  ' La variable salida obtendra
+  ' el resultado del la ejecucion de exiftool
+  Dim salida As String
+  ' Almacenara temporalmente un metadato
+  Dim elemento As String 
+  ' propiedad[0] -> llave
+  ' propiedad[1] -> valor
+  Dim propiedad As String[]
+  
+  If Exist(directorio) Then
+  
+    ' exiftool retorna los metadatos de un archivo.
+    ' File Name : Slow_Show.mp3
+    ' Puede devolver los metadatos en formato json o csv.
+    ' -S : devuelve la candena sin espacios de mas.
+    ' -n : devuelve los metadatos como datos numericos, es decir
+    ' en vez de obtener File Size : 2.5 MB -> File Size: 645...
+    Exec ["exiftool", "-n", directorio] To salida
+    
+    
+    ' Se recorre cada metadato y se le asigna a 
+    ' la variable elemento temporalmente
+    For Each elemento In Split(salida, "\n", "\"") 
+        
+        Debug elemento
+        Print "----------------------------"
+        
+        ' se verifica que no sea el fin de la salida.
+        If elemento <> "" Then
+          ' se divide el elemento para obtener:
+          ' propiedad[0] -> llave
+          ' propiedad[1] -> valor
+           propiedad = Split(elemento, ":", "\"")
+           
+           ' Trim elimina los espacion en blanco de la cadena
+           Select Case Trim(propiedad[0])
+             ' Propiedades de archivo
+             ' 
+             Case "File Name"
+               ' ...foo.mp3
+               nombreArchivo = propiedad[1]
+             Case "Directory"
+               ' ../.../...
+               directorio = propiedad[1]
+             Case "File Size"
+               ' se supone que se obtendra un valor
+               ' entero como : 6457736
+               sizeArchivo = CInt(propiedad[1])
+             Case "File Type"
+               tipoArchivo = propiedad[1]
+               ' agregarArtista(propiedad[1])
+             Case "Audio Bitrate"
+               ' se obtiene el bitrate en bites : 242803.252425694
+               ' se requiere guardar el bitrate en kb 
+               ' 320kb, 196kb...
+               bitRate = Round(CFloat(propiedad[1]) / 1000)
+             Case "Band"
+               agregarArtista(propiedad[1])
+             Case "Track"
+               If IsInteger(propiedad[1]) Then
+                  numeroCancion = propiedad[1]
+               Endif
+             Case "Title"
+               titulo = propiedad[1]
+             Case "Album"
+               album = propiedad[1]
+             Case "Artist"
+               artista = propiedad[1]
+             Case "Comment"
+               comentario = propiedad[1]
+             Case "Genre"
+               genero = propiedad[1]
+             Case "Duration"
+               duracion = CFloat(propiedad[1])
+               
+           End Select
+        Endif
+    Next
+  ' propiedades archivo : [numeroCancion, numeroDisco, bitrate, duracion, filesize, bmp]
+  If Trim(artista) = Null Or Trim(artista) = "" Then artista = "Artista Desconocido"  
+  If Trim(titulo) = Null Or Trim(titulo) = "" Then titulo = nombreArchivo
+  If Trim(album) = Null Or Trim(album) = "" Then album = "Album Desconocido"  
+  If Trim(genero) = Null Or Trim(genero) = "" Then genero = "Genero Desconocido"  
+  agregarCancion(titulo, comentario, tipoArchivo, [numeroCancion, numeroDisco, bitRate, duracion, sizeArchivo, 0], [artista, album, genero, "compositor", Trim(directorio) & "/" & Trim(nombreArchivo)])
+  
+  Endif
+  
+End
+
+' Function@Obtener
+' @parametro tabla => String, el nombre de la tabla.
+' @parametro campos[] => String  los campos a retornar, si asigna como NULL o [0] = "" usara un * 
+' @parametro llave => String como la llave de busqueda
+' @parametro patron => patron de busqueda
+' @parametro opcionales => (ORDER BY, LIMIT....)
+' TODO: Validar la consulta
+' obtener<Tabla>, [<campos>]
+Static Public Function obtener(tabla As String, campos As String[], llave As String, patron As String, opcionales As String[]) As Result
+  Dim request As String
+  Dim $result As Result
+  ' SELECT foo, bar FROM &1 WHERE &2 = &3  &4 : 
+  '     &1 => Tabla
+  '     &2 => llave
+  '     &3 => patron
+  '     &4 => argumentos opcionales (order by...)
+  
+  request = "SELECT "
+  If campos <> Null And campos[0] <> Null Then 
+    request &= campos.Join(", ") & "  FROM  "
+  Else 
+    request &= "* FROM "
+  Endif
+  
+  request &= tabla 
+  
+  ' TODO: Usar &X en lugar de concatenar las variables
+  If llave <> Null And patron <> Null Then
+    request &= " WHERE " & llave & " = " & patron
+  Endif
+  
+  If opcionales <> Null And opcionales[0] <> Null Then
+    request &= opcionales.Join("  ")
+  Endif
+  
+  If tabla = "Artista" Or tabla = "Album" Or tabla = "Cancion" Or tabla = "Directorio" Or tabla = "Genero" Then
+    $result = $coneccion.Exec(request)
+  Else
+    $result = Null
+    Debug "No existe la tabla : " & tabla
+  Endif
+  
+  Return $result
+End
+
+' TODO: Describir.
+Static Public Function obtenerId(tabla As String, nombre As String) As Integer
+  
+  Dim $result As Result
+  Dim foo As String
+  
+  If tabla = "Artista" Then foo = "nombreArtista"
+  If tabla = "Album" Then foo = "nombreAlbum"
+  If tabla = "Cancion" Then foo = "titulo"
+  
+  $result = $coneccion.Exec("SELECT id FROM " & tabla & " WHERE " & foo & " = \"" & nombre & "\" LIMIT 1;")
+  
+  If $result.Available Then 
+    Return CInt($result!id)
+  Else 
+    Return 0
+  Endif
+  
+End
+
+Static Public Function obtenerLike(tabla As String, texto As String) As Result
+  
+  Dim $result As Result
+  Dim foo As String
+  
+  If tabla = "Artista" Then foo = "nombreArtista"
+  If tabla = "Album" Then foo = "nombreAlbum"
+  If tabla = "Cancion" Then foo = "titulo"
+  
+  $result = $coneccion.Exec("SELECT * FROM " & tabla & " WHERE " & foo & " LIKE \"%" & texto & "%\";")
+  
+  Return $result
+  
+End
+
+Static Public Function obtenerPorId(tabla As String, id As String) As Result
+  
+  Dim $result As Result
+  
+  $result = $coneccion.Exec("SELECT * FROM " & tabla & " WHERE id = \"" & id & "\" LIMIT 1;")
+  
+  Return $result
+  
+End
+
+Static Public Function cerrar()
+  
+  If $coneccion.Opened Then
+    $coneccion.Close()
+  Endif
+  
+End

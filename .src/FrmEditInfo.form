@@ -1,0 +1,15 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,111,61)
+  Resizable = False
+  Arrangement = Arrange.Vertical
+  { Label1 Label
+    MoveScaled(6,4,24,4)
+    Text = ("Label1")
+  }
+  { TextBox1 TextBox
+    MoveScaled(34,4,74,4)
+    Text = ("TextBox1")
+  }
+}

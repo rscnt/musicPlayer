@@ -1,0 +1,18 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,101,55)
+  Arrangement = Arrange.Horizontal
+  { Panel1 Panel
+    MoveScaled(2,17,27,16)
+    Arrangement = Arrange.Vertical
+    { IVMenuOpt IconView
+      MoveScaled(0,0,16,16)
+      Expand = True
+    }
+  }
+  { panelContexto Panel
+    MoveScaled(41,5,74,60)
+    Expand = True
+  }
+}

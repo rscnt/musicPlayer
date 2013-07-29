@@ -1,0 +1,17 @@
+# Gambas Project File 3.0
+# Compiled with Gambas 3.4.1
+Title=musicPlayer
+Startup=FMain
+Version=0.0.3
+Component=gb.image
+Component=gb.qt4
+Component=gb.form
+Component=gb.db
+Component=gb.db.form
+Component=gb.settings
+Component=gb.media
+Component=gb.pcre
+Component=gb.qt4.ext
+TabSize=2
+ExecPath=/home/_r/musicPlayer.gambas
+Packager=1
