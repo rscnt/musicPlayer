@@ -10,10 +10,21 @@ Private trvView As TreeView
 Private grdView As GridView
 Private grdViewTags As GridView
 
+' Info Panel
+Private tabContext As TabStrip
+Private wwwView As WebView
+Private lyricsWikiView As WebView
+' Letras Panel
 ' Variables contexto
+Private lblletras As TextLabel
 Private lblArtista As Label
 Private lblAlbum As Label
 Private lblCancion As Label
+Private picAlbum As PictureBox
+
+
+' Fila Reciente
+Private numeroRecienteFila As Integer = -1
 
 Private txtTemp As TextBox
   
@@ -64,7 +75,7 @@ Public Function buildTopPanel()
   $panelTop.Arrangement = 1
   $panelTop.Height = 25
   $panelTop.Padding = 2
-  $panelTop.Background = Color.RGB(108, 193, 242)
+  $panelTop.Background = Color.RGB(245, 245, 245, 1)
   ' ------- /Panel Superior ---
   
   ' --- Panel Superior => controles de ventana
@@ -92,7 +103,7 @@ Public Function buildTopPanel()
   $busquedaPanel.Arrangement = 1
   $busquedaPanel.Expand = True
   $busquedaPanel.Width = Me.Width * 0.60
-  $busquedaPanel.Background = Color.White
+  $busquedaPanel.Background = Color.RGB(245, 245, 245, 1)
   ' ---
   txtTemp = New TextBox($busquedaPanel) As "txtBusqueda"
   txtTemp.Expand = True
@@ -136,6 +147,7 @@ Public Sub btnTam_Click()
   
   grdView.Clear
   grdView.Rows.Count = 0
+  numeroRecienteFila = -1
   $reproductor.Stop
   
 End
@@ -151,7 +163,9 @@ Public Sub btnRefresh_Click()
   
   llevarTreeView()
   grdView.Clear
+  $reproductor.Stop
   grdView.Rows.Count = 0
+  numeroRecienteFila = -1
   llenarPlaylist("", "")
   
 End
@@ -175,6 +189,8 @@ Private Function buildMdlPanel()
   Dim btnTmp As Button
   Dim tblTmp As TableView
   
+  
+  
   ' -- Paneles
   ' -- Biblioteca
   panelTmp = New Panel(Me) As "mdlPanel"
@@ -186,7 +202,7 @@ Private Function buildMdlPanel()
   panelTmp = New Panel(panelTmp) As "rgtPanel"
   panelTmp.Arrangement = 2
   panelTmp.Padding = 10
-  panelTmp.Width = 450
+  panelTmp.Width = 250
   
   ' -- paneels divisores playlists - libreria
   panelTmp = New Panel(panelTmp) As "libPanel"
@@ -220,6 +236,36 @@ Private Function buildMdlPanel()
   grdViewTags.Rows.Count = 7
   grdViewTags.Background = Color.RGB(245, 245, 245, 1)
   
+  
+  tabContext = New TabStrip(panelTmp.Parent.Parent) As "infoPanel"
+  tabContext.Expand = True
+  tabContext.Arrangement = 2
+  tabContext.Padding = 5
+  tabContext.Background = Color.RGB(245, 245, 245, 1)
+  tabContext.Count = 3
+  tabContext[1].Text = "Letras"
+  tabContext[1].Picture = Picture["icon:/huge/pen"]
+  tabContext[2].Picture = Picture["icon:/huge/internet"]
+  tabContext[2].Text = "Wikipedia"
+  
+  tabContext.Index = 1
+  panelTmp = New Panel(tabContext) As "lyricsPanel"
+  panelTmp.Expand = True
+  panelTmp.Arrangement = 2
+  panelTmp.Padding = 20
+  panelTmp.Background = Color.RGB(245, 245, 245, 1)
+  
+  ' Letras Panel {{{
+  lyricsWikiView = New WebView(panelTmp) As "lyrics"
+  lyricsWikiView.Expand = True
+  ' }}}
+  
+  tabContext.Index = 2
+  wwwView = New WebView(tabContext) As "wwwView"
+  wwwView.Expand = True
+  wwwView.Background = Color.RGB(245, 245, 245, 1)
+  wwwView.HTML = "<body><style> * { background: #f5f5f5} </style><body>"
+  
   panelTmp = New Panel(panelTmp.Parent.Parent) As "tblVPanel"
   panelTmp.Expand = True
   panelTmp.Arrangement = 2
@@ -244,7 +290,9 @@ Private Function buildMdlPanel()
   grdView.Columns[2].Text = "Artista"
   grdView.Columns[2].Alignment = 0
   
-  llenarPlaylist("", "")
+  If Preferencias.configurada() Then
+   llenarPlaylist("", "")
+  Endif
   ' 
   ' panelTmp = New Panel(panelTmp.Parent) As "fooPanel"
   ' panelTmp.Width = 350
@@ -258,9 +306,39 @@ Private Function buildMdlPanel()
   
 End
 
-Public Sub grdPlaylist_DblClick()
+' Resaltar la cancion actual
+Private Sub resaltarFilaActual()
   
   'Reproductor.reproducir(...)
+  
+  If numeroRecienteFila <> -1 Then
+    
+    grdView[numeroRecienteFila, 0].Background = Color.RGB(245, 245, 245, 1)
+    grdView[numeroRecienteFila, 1].Background = Color.RGB(245, 245, 245, 1)
+    grdView[numeroRecienteFila, 2].Background = Color.RGB(245, 245, 245, 1)
+    
+    grdView[numeroRecienteFila, 0].Foreground = Color.RGB(0, 0, 0, 1)
+    grdView[numeroRecienteFila, 1].Foreground = Color.RGB(0, 0, 0, 1)
+    grdView[numeroRecienteFila, 2].Foreground = Color.RGB(0, 0, 0, 1)
+  
+  Endif
+  
+  grdView[grdView.Row, 0].Background = Color.RGB(73, 130, 199, 1)
+  grdView[grdView.Row, 1].Background = Color.RGB(73, 130, 199, 1)
+  grdView[grdView.Row, 2].Background = Color.RGB(73, 130, 199, 1)
+  
+  grdView[grdView.Row, 0].Foreground = Color.RGB(232, 232, 232, 1)
+  grdView[grdView.Row, 1].Foreground = Color.RGB(232, 232, 232, 1)
+  grdView[grdView.Row, 2].Foreground = Color.RGB(232, 232, 232, 1)
+  
+  numeroRecienteFila = grdView.Row
+  
+End
+
+
+Public Sub grdPlaylist_DblClick()
+  
+  resaltarFilaActual()
   reproducir(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))
   llenarEtiquetas(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))
   Exec ["notify-send", "<br/><b>" & grdView[grdView.Row, 0].Text & "</b><br/>" & grdView[grdView.Row, 1].Text & "<br/>" & grdView[grdView.Row, 2].Text]
@@ -282,7 +360,7 @@ Private Function buildBtmPanel()
   btmPanelTmp = New Panel(Me) As "btmPanel"
   btmPanelTmp.Arrangement = 1
   btmPanelTmp.Height = 50
-  btmPanelTmp.Background = Color.RGB(240, 240, 240)
+  btmPanelTmp.Background = Color.RGB(245, 245, 245, 1)
   
   ' -- Controles de Reproductor
   panelTmp = New Panel(btmPanelTmp) As "controlPanel"
@@ -387,6 +465,7 @@ Private Sub mediaControlAccion(name As String)
             reproducir(Datos.obtenerId("Cancion", grdView[0, 0].Text))
           Endif
         Endif
+        
       Case "next"
         If grdView.Row >= 0 And grdView.Row <> (grdView.Rows.Count - 1) Then
           ' Reproductor.reproducir(...)
@@ -399,10 +478,15 @@ Private Sub mediaControlAccion(name As String)
           ' Reproductor.reproducir(...)
           reproducir(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))
         Endif
+      
+      Case "stop"
+        $reproductor.Stop
+        
       Case Else
         Return
     End Select
     
+    resaltarFilaActual()
     llenarEtiquetas(Datos.obtenerId("Cancion", grdView[grdView.Row, 0].Text))  
     
     ' TODO: Mejorar notificaciones
@@ -455,6 +539,7 @@ Private Function llenarPlaylist(tabla As String, id As String)
     Case Else
       llave = ""
   End Select
+  
   
   $result = Datos.obtener("Cancion", [""], llave, id, [""])
   
@@ -537,7 +622,7 @@ Private Function busquedaPlayList(texto As String)
         $resultPivot2 = Datos.obtener("Album", ["nombreAlbum"], "id", $resultPivot!idAlbum, [""])
         album = $resultPivot2!nombreAlbum
       
-        agregarPlayList(cancion, artista, album)
+        agregarPlayList(cancion, album, artista)
         
       Next
       
@@ -567,7 +652,7 @@ Private Function busquedaPlayList(texto As String)
         Debug "Artista => " & $resultPivot!idArtista
         
         ' If idArtistas.Find($resultPivot!idArtista, 0, 0) > 0 Then
-          agregarPlayList(cancion, artista, album)        
+         agregarPlayList(cancion, album, artista)  
         ' Endif
   
       Next
@@ -592,7 +677,7 @@ Private Function busquedaPlayList(texto As String)
       Debug "\n Canciones \n \t Artista => " & $result!idArtista & " \n Album => " & $result!idAlbum
         
       'If idArtistas.Find($result!idArtista, 0, 0) > 0 And idAlbums.Find($result!idAlbum, 0, 0) > 0 Then
-          agregarPlayList(cancion, artista, album)        
+          agregarPlayList(cancion, album, artista)
       'Endif
       
     Next
@@ -726,19 +811,78 @@ End
 
 Private Function reproducir(id As Integer) 
   Dim $result As Result
+  Dim $pivotResult As Result
   
-  $result = Datos.obtener("Cancion", ["idDirectorio"], "id", CString(id), [""])
+  
+  $result = Datos.obtener("Cancion", ["idDirectorio", "idArtista", "titulo"], "id", CString(id), [""])
   $reproductor.Stop
-  $result = Datos.obtener("Directorio", ["directorio"], "id", $result!idDirectorio, [""])
-
-  If Exist($result!directorio) Then
-    $reproductor.URL = Media.URL($result!directorio)
+  
+  $pivotResult = Datos.obtener("Directorio", ["directorio"], "id", $result!idDirectorio, [""])
+  If Exist($pivotResult!directorio) Then
+    $reproductor.URL = Media.URL($pivotResult!directorio)
     $reproductor.Play  
   Else
-    Debug $result!directorio
+    Debug $pivotResult!directorio
   Endif
 
+  $pivotResult = Datos.obtener("Artista", ["nombreArtista"], "id", $result!idArtista, [""])
+  ' and action = rende rwwwView.Url = "http://en.m.wikipedia.org/w/index.php?title=" & $pivotResult!nombreArtista
+  colocarInformacion($pivotResult!nombreArtista, $result!titulo)
 End
+
+' Colocar las letras e informacion de la cancion
+Private Sub colocarInformacion(nombreArtista As String, nombreCancion As String)
+  
+  Dim strLyricsWiki As String
+  Dim textLyricsWiki As String
+  Dim strWikipeda As String 
+  
+  ' Colocar la pagina de wikipedia
+  strWikipeda = "http://en.m.wikipedia.org/wiki/" & nombreArtista
+  wwwView.Url = strWikipeda
+  
+  ' Obtener las letras
+  ' Escapando los caracteres 
+  '  echo "nombre Artista " | perl -lpe 's/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg' => 
+  ' '  ]
+  ' Shell "echo \"" & nombreArtista & "\" | perl -lpe \'s/([^A-Za-z0-9])/sprintf(\"%%%02X\", ord($1))/seg\'" To nombreArtista
+  ' Shell "echo \"" & nombreCancion & "\" | perl -lpe \'s/([^A-Za-z0-9])/sprintf(\"%%%02X\", ord($1))/seg\'" To nombreCancion
+  
+  ' strLyricsWiki = "http://lyrics.wikia.com/api.php?action=lyrics&fmt=html&func=getSong&song=" & Trim(nombreCancion) & "&artist=" & Trim(nombreArtista)
+  strLyricsWiki = "http://lyrics.wikia.com/" & Trim(nombreArtista) & ":" & Trim(nombreCancion) & "?useskin=wikiamobile"
+  lyricsWikiView.Url = strLyricsWiki
+  ' ' curl => es una herramienta para transmitir informacion hacia o de un servidor y/o host.
+
+  ' Shell "curl " & strLyricsWiki To textLyricsWiki
+  ' 
+  ' Message(InStr(textLyricsWiki, "<div class='lyricbox'>"))
+  ' 
+  ' If textLyricsWiki Then
+  '   lblletras.Text = textLyricsWiki
+  ' Endif
+  
+End
+
+
+' Eliminando paneles cuando la pagina se ha cargado
+Public Sub wwwView_Progress()
+  
+  wwwView.Document.FindFirst("head").AddAfter("<style type=\"text/css\"> #page-actions, .header { display: none } </style>")
+  wwwView.Document.FindFirst("head").AddAfter("<style type=\"text/css\"> #mw-mf-viewport { background: #f5f5f5 } </style>")
+  If wwwView.Document.FindFirst(".header") Then
+    wwwView.Document.FindFirst(".header").Delete()
+  Endif
+End
+
+
+Public Sub lyrics_Progress()
+  
+  lyricsWikiView.Document.FindFirst("head").AddAfter("<style type=\"text/css\"> .rtMatcher { display: none } </style>")
+  lyricsWikiView.Document.FindFirst("head").AddAfter("<style type=\"text/css\"> #wkAdInContent { display: none } </style>")
+  lyricsWikiView.Document.FindFirst("head").AddAfter("<style type=\"text/css\"> #wkTopBar { display: none } </style>")
+  
+End
+
 
 Private Function cambiarPausa() As Boolean
   

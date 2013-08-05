@@ -11,6 +11,10 @@ gb.db
 gb.db.form
 gb.settings
 gb.media
+gb.net
+gb.net.curl
 gb.pcre
 gb.qt4.ext
+gb.qt4.webkit
+gb.xml
 

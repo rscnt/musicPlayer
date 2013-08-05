@@ -42,6 +42,11 @@ Static Public Function init() As Boolean
   Else
     
     $preferencias["fecha-incio"] = Now
+    $preferencias["dbNombre"] = "musicDB"
+    $preferencias["dbServer"] = "127.0.0.1"
+    $preferencias["dbUsuario"] = "_r"
+    $preferencias["dbPass"] = "foo45"
+    $preferencias["dbPuerto"] = "3306"
     $preferencias.Save
     $exist = False
     

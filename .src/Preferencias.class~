@@ -109,6 +109,6 @@ End
 
 Static Public Function cerrar()
   
-  $preferencias.Save
+  $preferencias.Save()
   
 End

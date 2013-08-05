@@ -6,13 +6,4 @@
   Expand = True
   Text = ("musicPlayer")
   Icon = Picture["icon:/huge/audio"]
-  { Menu1 Menu
-    Text = ("Menu1")
-    { Menu2 Menu
-      Text = ("Menu2")
-    }
-  }
-  { TreeView1 TreeView
-    MoveScaled(30,18,16,16)
-  }
 }

@@ -1,5 +1,5 @@
 # Gambas Project File 3.0
-# Compiled with Gambas 3.4.1
+# Compiled with Gambas 3.4.2
 Title=musicPlayer
 Startup=FMain
 Version=0.0.3
@@ -10,8 +10,12 @@ Component=gb.db
 Component=gb.db.form
 Component=gb.settings
 Component=gb.media
+Component=gb.net
+Component=gb.net.curl
 Component=gb.pcre
 Component=gb.qt4.ext
+Component=gb.qt4.webkit
+Component=gb.xml
 TabSize=2
 ExecPath=/home/_r/musicPlayer.gambas
 Packager=1

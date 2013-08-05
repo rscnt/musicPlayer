@@ -732,6 +732,7 @@ Static Public Function obtener(tabla As String, campos As String[], llave As Str
   '     &3 => patron
   '     &4 => argumentos opcionales (order by...)
   
+  
   request = "SELECT "
   If campos <> Null And campos[0] <> Null Then 
     request &= campos.Join(", ") & "  FROM  "

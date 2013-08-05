@@ -658,6 +658,8 @@ Static Public Sub agregarArchivo(directorio As String)
           ' propiedad[1] -> valor
            propiedad = Split(elemento, ":", "\"")
            
+           
+           
            ' Trim elimina los espacion en blanco de la cadena
            Select Case Trim(propiedad[0])
              ' Propiedades de archivo
@@ -729,6 +731,8 @@ Static Public Function obtener(tabla As String, campos As String[], llave As Str
   '     &2 => llave
   '     &3 => patron
   '     &4 => argumentos opcionales (order by...)
+  
+  $coneccion.Open
   
   request = "SELECT "
   If campos <> Null And campos[0] <> Null Then 
